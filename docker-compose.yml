@@ -1,8 +1,9 @@
 version: "3.4"
 
 networks:
-  apps:
+  traefik:
     external: true
+  vue-internal:
 
 services:
   app:
@@ -17,11 +18,65 @@ services:
       - ./app:/var/dev/
       - ./docker/front-end/locks:/root/locks
     networks:
-      - apps
-    command: 'npm run serve'
+      - traefik
+      - vue-internal
+    command: "npm run serve"
     working_dir: /var/dev
     labels:
       - "traefik.http.routers.app.rule=Host(`vue.raisbbs.com.br`)"
-      - "traefik.docker.network=apps"
+      - "traefik.docker.network=traefik"
       - "traefik.enable=true"
       - "traefik.basic.frontend.rule=Host:vue.raisbbs.com.br"
+
+  php:
+    container_name: php
+    volumes:
+      - ./api:/var/www/api
+      - ./docker/php-fpm/sockets:/run/php
+      - ./docker/php-fpm/listen.conf:/etc/php/7.4/fpm/pool.d/www.conf
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    ports:
+      - "$PHP_PORT:9000"
+    networks:
+      - vue-internal
+    working_dir: /var/www
+    command: /usr/sbin/php-fpm7.4 -F -R -O
+
+  api:
+    image: nginx:1.19-alpine
+    container_name: api
+    restart: "no"
+    ports:
+      - "$API_PORT:80"
+    volumes:
+      - ./api:/var/www/api
+      - ./docker/api/nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - traefik
+      - vue-internal
+    labels:
+      - "traefik.http.routers.api.rule=Host(`api.raisbbs.com.br`)"
+      - "traefik.docker.network=traefik"
+      - "traefik.enable=true"
+      - "traefik.basic.frontend.rule=Host:api.raisbbs.com.br"
+
+  database:
+    image: mysql:8.0
+    container_name: database
+    restart: "always"
+    tty: true
+    ports:
+      - "$MYSQL_PORT:3306"
+    environment:
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+      MYSQL_PASSWORD: admin
+      MYSQL_ROOT_PASSWORD: admin
+    env_file: .env
+    networks:
+      - vue-internal
+    volumes:
+      - ./docker/db-data:/var/lib/mysql
+      - ./docker/provision/glxorama-db:/docker-entrypoint-initdb.d
