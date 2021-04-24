@@ -4,7 +4,5 @@ module.exports = {
     disableHostCheck: true,
   },
 
-  transpileDependencies: [
-    'vuetify'
-  ]
+  transpileDependencies: ["vuetify"],
 };
