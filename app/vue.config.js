@@ -3,4 +3,8 @@ module.exports = {
     port: 8090,
     disableHostCheck: true,
   },
+
+  transpileDependencies: [
+    'vuetify'
+  ]
 };
