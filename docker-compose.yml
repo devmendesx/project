@@ -1,12 +1,27 @@
-version: '3'
+version: "3.4"
+
+networks:
+  apps:
+    external: true
+
 services:
- vue-ui:
-    build:
-      context: ./app
-      dockerfile: Dockerfile-frontend
+  app:
+    image: node:12.18-alpine
+    container_name: app
+    restart: "always"
+    tty: true
     ports:
-      - "8080:8080"
-    container_name: vue-ui
+      - "$FRONTEND_PORT:8090"
     volumes:
-       - ./my-app:/usr/src/app/app
-       - /usr/src/app/app/node_modules
+      - ./docker/front-end/docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh
+      - ./app:/var/dev/
+      - ./docker/front-end/locks:/root/locks
+    networks:
+      - apps
+    command: 'npm run serve'
+    working_dir: /var/dev
+    labels:
+      - "traefik.http.routers.app.rule=Host(`vue.raisbbs.com.br`)"
+      - "traefik.docker.network=apps"
+      - "traefik.enable=true"
+      - "traefik.basic.frontend.rule=Host:vue.raisbbs.com.br"
