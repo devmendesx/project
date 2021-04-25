@@ -5,9 +5,12 @@ Vue.use(VueRouter);
 
 const routes = [
   {
-    path: "/",
-    name: "Crud Example",
+    path: "/crud",
+    name: "about",
     component: () => import("@/components/crud/index.vue"),
+    meta: {
+      title: "About"
+    }
   },
 ];
 

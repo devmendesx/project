@@ -1,9 +1,9 @@
 version: "3.4"
 
 networks:
+  vueapp:
   traefik:
     external: true
-  vue-internal:
 
 services:
   app:
@@ -19,7 +19,7 @@ services:
       - ./docker/front-end/locks:/root/locks
     networks:
       - traefik
-      - vue-internal
+      - vueapp
     command: "npm run serve"
     working_dir: /var/dev
     labels:
@@ -40,7 +40,7 @@ services:
     ports:
       - "$PHP_PORT:9000"
     networks:
-      - vue-internal
+      - vueapp
     working_dir: /var/www
     command: /usr/sbin/php-fpm7.4 -F -R -O
 
@@ -55,28 +55,28 @@ services:
       - ./docker/api/nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - traefik
-      - vue-internal
+      - vueapp
     labels:
       - "traefik.http.routers.api.rule=Host(`api.raisbbs.com.br`)"
       - "traefik.docker.network=traefik"
       - "traefik.enable=true"
       - "traefik.basic.frontend.rule=Host:api.raisbbs.com.br"
 
-  database:
+  app-db:
     image: mysql:8.0
-    container_name: database
+    container_name: app-db
     restart: "always"
     tty: true
     ports:
       - "$MYSQL_PORT:3306"
     environment:
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
       MYSQL_PASSWORD: admin
       MYSQL_ROOT_PASSWORD: admin
-    env_file: .env
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    command: --init-file /data/application/init.sql
     networks:
-      - vue-internal
+      - vueapp
     volumes:
       - ./docker/db-data:/var/lib/mysql
-      - ./docker/provision/glxorama-db:/docker-entrypoint-initdb.d
+      - ./docker/database/init.sql:/data/application/init.sql
