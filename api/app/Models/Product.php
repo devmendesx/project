@@ -23,10 +23,20 @@ class Product extends Model
      * @return Collection
      */
     public static function search($request) {
-
         $data = Product::whereNull('deleted_at');
         if(isset($request->id)) {
             $data = $data->where('id', $request->id);
+        }
+        if(isset($request->name)){
+            $data = $data->where('name', 'like', '%'.trim($request->name).'%');
+        }
+        if(isset($request->description)){
+            $data = $data->where('description', 'like', '%'.trim($request->description).'%');
+        }
+        if(isset($request->price)){
+            $price = str_replace('.','',$request->price);
+            $price = str_replace(',','',$request->price);
+            $data = $data->where('price', 'like', '%'.trim($price).'%');
         }
         return $data->get();
     }
