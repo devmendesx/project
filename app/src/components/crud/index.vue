@@ -1,5 +1,6 @@
 <template>
   <div>
+    <v-container>
     <h1>Pagina de Produtos</h1>
     <v-form ref="form">
       <v-text-field
@@ -19,11 +20,10 @@
 
       <v-currency-field
         label="Preço"
-        prefix="R$"
         required
         v-model="item.price"
       />
-      <v-btn class="mr-4" @click="save"> Cadastrar </v-btn>
+      <v-btn class="mr-4" @click="save" color="#00ff00"> Cadastrar </v-btn>
     </v-form>
     <br />
     <h2>Listagem de produtos</h2>
@@ -37,6 +37,7 @@
             <th class="text-left">Nome</th>
             <th class="text-left">Descrição</th>
             <th class="text-left">Preço</th>
+
           </tr>
         </thead>
         <tbody>
@@ -44,10 +45,13 @@
             <td>{{ item.name }}</td>
             <td>{{ item.description }}</td>
             <td>{{ item.price }}</td>
+            <td><v-btn :to="'/edit/' + item.id">Editar</v-btn></td>
+            <td><v-btn @click="destroy(item.id)">Deletar</v-btn></td>
           </tr>
         </tbody>
       </template>
     </v-simple-table>
+    </v-container>
   </div>
 </template>
 
@@ -56,9 +60,7 @@ import axios from "axios";
 export default {
   data() {
     return {
-      nameRules: [
-        (v) => !!v || "Nome é obrigatório",
-      ],
+      nameRules: [(v) => !!v || "Nome é obrigatório"],
       item: {
         name: "",
         description: "",
@@ -75,12 +77,29 @@ export default {
           url: "/api/products",
           data: this.item,
         };
+        axios(config)
+          .then((response) => {
+            this.getItems();
+            alert(response.data.message);
+          })
+          .catch((error) => console.log(error.data.message));
+      }
+    },
+    destroy(id){
+      if(confirm("Deseja mesmo deletar?")){
+       let config = {
+          method: "delete",
+          url: "/api/products/" + id,
+          data: this.item,
+        };
 
         axios(config)
-          .then((response) => alert(response.data.message))
-          .catch((error) => alert(error.data.message));
+          .then((response) => {
+            this.getItems();
+            alert(response.data.message);
+          })
+          .catch((error) => console.log(error.data.message));
       }
-      this.getItems();
     },
     getItems() {
       let config = {

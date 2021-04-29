@@ -12,6 +12,11 @@ const routes = [
       title: "About",
     },
   },
+  {
+    path: "/edit/:id",
+    name: "edit",
+    component: () => import("@/components/crud/edit.vue"),
+  },
 ];
 
 const router = new VueRouter({
